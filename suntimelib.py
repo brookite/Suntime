@@ -1,6 +1,13 @@
 from math import *
 import datetime
 
+SOURCE = "https://www.edwilliams.org/sunrise_sunset_example.htm"
+__doc__ = """
+Sunrise/Sunset Algorithm Example on Python
+Source: https://www.edwilliams.org/sunrise_sunset_example.htm
+"""
+DOCUMENTATION = __doc__
+
 zenith = {
     "official": cos(radians(90 + 5 / 6)),
     "civil": cos(radians(96)),
