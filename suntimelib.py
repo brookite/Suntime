@@ -1,5 +1,6 @@
 from math import *
 import datetime
+import os
 
 SOURCE = "https://www.edwilliams.org/sunrise_sunset_example.htm"
 __doc__ = """
@@ -14,6 +15,21 @@ zenith = {
     "nautical": cos(radians(102)),
     "astronomical": cos(radians(108))
 }
+
+
+def read_coords(filepath=__file__):
+    if os.path.exists(os.path.join(os.path.split(filepath)[0], "coords.txt")):
+        f = open(os.path.join(os.path.split(filepath)[0], "coords.txt"), "r")
+        coords = list(map(float, f.read().split("\n")))
+        f.close()
+        return tuple(coords)
+    else:
+        lat, long = 0, 0
+        if os.getenv("LAT") is not None:
+            lat = float(os.getenv("LAT"))
+        if os.getenv("LONG") is not None:
+            long = float(os.getenv("LONG"))
+        return lat, long
 
 
 def _day_of_year(year, month, day):
@@ -71,7 +87,8 @@ def _sun_declination(L):
 
 
 def _local_hour_angle(latitude, sinDec, cosDec, current_zenith, rise=True):
-    cosH = (current_zenith - (sinDec * sin(radians(latitude)))) / (cosDec * cos(radians(latitude)))
+    cosH = (current_zenith - (sinDec * sin(radians(latitude)))) / \
+        (cosDec * cos(radians(latitude)))
     if cosH > 1:
         # print("the sun never rises on this location (on the specified date)")
         return None
@@ -100,6 +117,15 @@ def _get_time(H, RA, t, lngHour, local_offset):
 
 
 def calculate(latitude, longitude, year, month, day, current_zenith, rise, time_offset=0):
+    """
+    Calculates sunrise or sunset time
+
+    longitude is positive for East and negative for West
+    year, month, day - date parameters
+    current_zenith - one of values in 'suntimelib.zenith' dict
+    rise - boolean
+    time_offset - UTC offset (integer)
+    """
     current_zenith = zenith[current_zenith]
     N = _day_of_year(year, month, day)
     t, lngHour = _longitude_to_hour(longitude, N, rise)
@@ -113,6 +139,9 @@ def calculate(latitude, longitude, year, month, day, current_zenith, rise, time_
 
 
 def decimal_to_time(value):
+    """
+    Float time value to hours and minutes, util method
+    """
     if hasattr(value, "__iter__"):
         value = list(value)
         for i in range(len(value)):
@@ -135,9 +164,18 @@ def decimal_to_time(value):
 
 
 def calculate_all(latitude, longitude, year, month, day, rise, time_offset=0):
+    """
+    Calculates times for all zeniths
+
+    longitude is positive for East and negative for West
+    year, month, day - date parameters
+    rise - boolean
+    time_offset - UTC offset (integer)
+    """
     a = []
     for z in zenith:
-        c = calculate(latitude, longitude, year, month, day, z, rise, time_offset)
+        c = calculate(latitude, longitude, year,
+                      month, day, z, rise, time_offset)
         a.append(c)
     a.sort()
     for i in a:
@@ -147,9 +185,20 @@ def calculate_all(latitude, longitude, year, month, day, rise, time_offset=0):
 
 
 def calculate_groups(latitude, longitude, year, month, day, rise, time_offset=0, zen=zenith.keys()):
+    """
+    Calculates times for zeniths in argument 'zen'
+
+    longitude is positive for East and negative for West
+    year, month, day - date parameters
+    current_zenith - array of values in 'suntimelib.zenith' dict
+    rise - boolean
+    time_offset - UTC offset (integer)
+
+    """
     a = {}
     for z in zen:
-        c = calculate(latitude, longitude, year, month, day, z, rise, time_offset)
+        c = calculate(latitude, longitude, year,
+                      month, day, z, rise, time_offset)
         a[z] = c
     todel = []
     for i in a:
@@ -161,11 +210,28 @@ def calculate_groups(latitude, longitude, year, month, day, rise, time_offset=0,
 
 
 def calculate_min_max(latitude, longitude, year, month, day, rise, time_offset=0):
+    """
+    Calculates minimum and maximum times for all zeniths
+
+    longitude is positive for East and negative for West
+    year, month, day - date parameters
+    rise - boolean
+    time_offset - UTC offset (integer)
+    """
     a = calculate_all(latitude, longitude, year, month, day, rise, time_offset)
     return min(a), max(a)
 
 
 def calculate_for_year(latitude, longitude, year, current_zenith, rise, time_offset=0):
+    """
+    Calculates sunrise or sunset time for all year for current zenith
+
+    longitude is positive for East and negative for West
+    year, month, day - date parameters
+    current_zenith - one of values in 'suntimelib.zenith' dict
+    rise - boolean
+    time_offset - UTC offset (integer)
+    """
     array = []
     dates = []
     first = datetime.datetime(year, 1, 1).timestamp()
@@ -174,12 +240,21 @@ def calculate_for_year(latitude, longitude, year, current_zenith, rise, time_off
     for i in range(days):
         t = first + 86400 * (i + 1)
         dt = datetime.datetime.fromtimestamp(t)
-        array.append(calculate(latitude, longitude, year, dt.month, dt.day, current_zenith, rise, time_offset))
+        array.append(calculate(latitude, longitude, year, dt.month,
+                               dt.day, current_zenith, rise, time_offset))
         dates.append(dt)
     return array, dates
 
 
 def calculate_minmax_for_year(latitude, longitude, year, rise, time_offset=0):
+    """
+    Calculates minimum and maximum times for all zeniths
+
+    longitude is positive for East and negative for West
+    year, month, day - date parameters
+    rise - boolean
+    time_offset - UTC offset (integer)
+    """
     array = []
     dates = []
     first = datetime.datetime(year, 1, 1).timestamp()
@@ -189,9 +264,11 @@ def calculate_minmax_for_year(latitude, longitude, year, rise, time_offset=0):
         t = first + 86400 * (i + 1)
         dt = datetime.datetime.fromtimestamp(t)
         if rise:
-            array.append(calculate_min_max(latitude, longitude, year, dt.month, dt.day, rise, time_offset)[0])
+            array.append(calculate_min_max(latitude, longitude,
+                                           year, dt.month, dt.day, rise, time_offset)[0])
         else:
-            array.append(calculate_min_max(latitude, longitude, year, dt.month, dt.day, rise, time_offset)[1])
+            array.append(calculate_min_max(latitude, longitude,
+                                           year, dt.month, dt.day, rise, time_offset)[1])
         dates.append(dt)
     return array, dates
 

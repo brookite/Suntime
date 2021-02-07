@@ -1,20 +1,9 @@
 from math import *
 import datetime
-import os
 from suntimelib import *
 
 
-def read_coords():
-    if os.path.exists(os.path.join(os.path.split(__file__)[0], "coords.txt")):
-        f = open(os.path.join(os.path.split(__file__)[0], "coords.txt"), "r")
-        coords = f.read().split("\n")
-        if len(coords) > 1:
-            lat, long = float(coords[0]), float(coords[1])
-            return lat, long
-    return 0, 0
-
-
-latitude, longitude = read_coords()
+latitude, longitude = read_coords(__file__)
 # longitude is positive for East and negative for West
 
 
