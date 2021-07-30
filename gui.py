@@ -74,6 +74,7 @@ class AppBundle:
         return self._app
 
 
-app = AppBundle()
-app.window.show()
-sys.exit(app.application.exec_())
+if __name__ == '__main__':
+    app = AppBundle()
+    app.window.show()
+    sys.exit(app.application.exec_())

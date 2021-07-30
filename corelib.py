@@ -1,7 +1,7 @@
 from astral import LocationInfo
 from astral.sun import sun, midnight, daylight, \
     night, golden_hour, blue_hour, twilight, elevation, zenith, azimuth
-from astral import moon
+from astral import moon, SunDirection
 from utils import locale
 import datetime
 import calendar
@@ -24,12 +24,15 @@ def get_data(location, date: datetime.datetime, tz=None):
     prev_data = sun(location.observer, date=date - datetime.timedelta(days=1), tzinfo=tz)
     next_data = sun(location.observer, date=date + datetime.timedelta(days=1), tzinfo=tz)
     data['moon_phase'] = moon.phase(date)
-    data["midnight"] = midnight(location.observer, date=date)
-    data["daylight"] = daylight(location.observer, date=date)
-    data["twilight"] = twilight(location.observer, date=date)
-    data["night"] = night(location.observer, date=date)
-    data["golden_hour"] = golden_hour(location.observer, date=date)
-    data["blue_hour"] = blue_hour(location.observer, date=date)
+    data["midnight"] = midnight(location.observer, date=date, tzinfo=tz)
+    data["daylight"] = daylight(location.observer, date=date, tzinfo=tz)
+    data["night"] = night(location.observer, date=date, tzinfo=tz)
+    data["twilight"] = twilight(location.observer, date=date, tzinfo=tz)
+    data["golden_hour"] = golden_hour(location.observer, date=date, tzinfo=tz)
+    data["blue_hour"] = blue_hour(location.observer, date=date, tzinfo=tz)
+    data["evening_twilight"] = twilight(location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
+    data["evening_golden_hour"] = golden_hour(location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
+    data["evening_blue_hour"] = blue_hour(location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
     data["solar_elevation"] = elevation(location.observer, dateandtime=date)
     data["zenith"] = zenith(location.observer, dateandtime=date)
     data["azimuth"] = azimuth(location.observer, dateandtime=date)
