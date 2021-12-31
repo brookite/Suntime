@@ -1,7 +1,7 @@
 from astral import LocationInfo
 from astral.sun import sun, midnight, daylight, \
     night, golden_hour, blue_hour, twilight, elevation, zenith, azimuth
-from astral import moon, SunDirection
+from astral import moon, SunDirection, Depression
 from utils import locale
 import datetime
 import calendar
@@ -19,10 +19,17 @@ def compile_date(year, month, day):
     return datetime.date(year, month, day)
 
 
-def get_data(location, date: datetime.datetime, tz=None):
-    data = sun(location.observer, date=date, tzinfo=tz)
-    prev_data = sun(location.observer, date=date - datetime.timedelta(days=1), tzinfo=tz)
-    next_data = sun(location.observer, date=date + datetime.timedelta(days=1), tzinfo=tz)
+def get_data(location, depression, date: datetime.datetime, tz=None):
+    data = sun(location.observer,
+               date=date,
+               tzinfo=tz,
+               dawn_dusk_depression=depression)
+    prev_data = sun(location.observer,
+                    date=date - datetime.timedelta(days=1),
+                    tzinfo=tz, dawn_dusk_depression=depression)
+    next_data = sun(location.observer,
+                    date=date + datetime.timedelta(days=1),
+                    tzinfo=tz, dawn_dusk_depression=depression)
     data['moon_phase'] = moon.phase(date)
     data["midnight"] = midnight(location.observer, date=date, tzinfo=tz)
     data["daylight"] = daylight(location.observer, date=date, tzinfo=tz)
@@ -30,9 +37,12 @@ def get_data(location, date: datetime.datetime, tz=None):
     data["twilight"] = twilight(location.observer, date=date, tzinfo=tz)
     data["golden_hour"] = golden_hour(location.observer, date=date, tzinfo=tz)
     data["blue_hour"] = blue_hour(location.observer, date=date, tzinfo=tz)
-    data["evening_twilight"] = twilight(location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
-    data["evening_golden_hour"] = golden_hour(location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
-    data["evening_blue_hour"] = blue_hour(location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
+    data["evening_twilight"] = twilight(
+        location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
+    data["evening_golden_hour"] = golden_hour(
+        location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
+    data["evening_blue_hour"] = blue_hour(
+        location.observer, date=date, tzinfo=tz, direction=SunDirection.SETTING)
     data["solar_elevation"] = elevation(location.observer, dateandtime=date)
     data["zenith"] = zenith(location.observer, dateandtime=date)
     data["azimuth"] = azimuth(location.observer, dateandtime=date)
@@ -61,7 +71,7 @@ def _find_minmax(param1, param2, min_condition=False, ignore_value=None, functio
     return param1 if res == cmp1 else param2
 
 
-def get_calculated_data(location, date, tz=None):
+def get_calculated_data(location, depression, date, tz=None):
     calcdata = {}
     calcdata["min_daylength"] = [None, None]
     calcdata["max_daylength"] = [None, None]
@@ -73,7 +83,8 @@ def get_calculated_data(location, date, tz=None):
 
     for n in range(int((datetime.date(date.year, 12, 31) - datetime.date(date.year, 1, 1)).days)):
         iterdate = datetime.date(date.year, 1, 1) + datetime.timedelta(days=n)
-        data = get_data(location, datetime.datetime(iterdate.year, iterdate.month, iterdate.day), tz)
+        data = get_data(location, depression, datetime.datetime(
+            iterdate.year, iterdate.month, iterdate.day), tz)
         calcdata["early_dawn"] = _find_minmax(calcdata.get("early_dawn"),
                                               data["dawn"], min_condition=True, function=time_compare)
         calcdata["early_sunrise"] = _find_minmax(calcdata.get("early_sunrise"),
@@ -114,9 +125,10 @@ def get_calculated_data(location, date, tz=None):
         calcdata["max_nightlength"][0] = iterdate if calcdata["max_nightlength"][1] == data["nightlength"] else calcdata["max_nightlength"][0]
 
     startmonth = datetime.datetime(date.year, date.month, 1)
-    startmonthdata = get_data(location, startmonth, tz)
-    endmonth = datetime.datetime(date.year, date.month, calendar.monthrange(date.year, date.month)[1])
-    endmonthdata = get_data(location, endmonth, tz)
+    startmonthdata = get_data(location, depression, startmonth, tz)
+    endmonth = datetime.datetime(
+        date.year, date.month, calendar.monthrange(date.year, date.month)[1])
+    endmonthdata = get_data(location, depression, endmonth, tz)
     calcdata["month_daylength_change"] = endmonthdata["daylength"].total_seconds() - \
         startmonthdata["daylength"].total_seconds()
     calcdata["month_nightlength_change"] = endmonthdata["nightlength"].total_seconds() - \
@@ -145,9 +157,19 @@ def _format(data):
         return str(data)
 
 
-def get_string(locales, datetime, location, tz=None):
-    data = get_data(location, datetime, tz)
-    calc_data = get_calculated_data(location, datetime, tz)
+def cmp_depression(string):
+    if string == "Civil":
+        return Depression.CIVIL
+    elif string == "Nautical":
+        return Depression.NAUTICAL
+    elif string == "Astronomical":
+        return Depression.ASTRONOMICAL
+
+
+def get_string(locales, depression, datetime, location, tz=None):
+    depression = cmp_depression(depression)
+    data = get_data(location, depression, datetime, tz)
+    calc_data = get_calculated_data(location, depression, datetime, tz)
     string = _format(datetime)
     template = string
     template += "\n\n"
@@ -155,5 +177,6 @@ def get_string(locales, datetime, location, tz=None):
         template += locale(key, locales) + ": " + _format(data[key]) + "\n"
     template += "\n\n"
     for key in calc_data:
-        template += locale(key, locales) + ": " + _format(calc_data[key]) + "\n"
+        template += locale(key, locales) + ": " + \
+            _format(calc_data[key]) + "\n"
     return template

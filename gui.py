@@ -27,7 +27,7 @@ class AppBundle:
 
     def plot(self):
         location = corelib.get_location(*self.get_coords())
-        build(location, self.get_date(), self.combobox_items.index(self.window.comboBox.currentText()))
+        build(location, self.get_date(), self.window.comboBox_2.currentText(), self.combobox_items.index(self.window.comboBox.currentText()))
 
     def get_date(self):
         return self.window.calendar.dateTime().toPyDateTime()
@@ -37,7 +37,7 @@ class AppBundle:
 
     def push(self):
         location = corelib.get_location(*self.get_coords())
-        self._window.textarea.setText(corelib.get_string(self._locales, self.get_date(), location))
+        self._window.textarea.setText(corelib.get_string(self._locales, self.window.comboBox_2.currentText(), self.get_date(), location))
 
     def _setupWindow(self):
         found = lookup_location()

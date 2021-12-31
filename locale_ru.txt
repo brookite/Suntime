@@ -46,5 +46,5 @@ Dawn/Dusk=Рассвет/Закат
 Sunrise/Sunset=Восход/Заход
 Noon/Midnight=Полдень/Полночь
 Daylength/Nightlength=Длина дня/Длина ночи
-Latitude:=Широта
-Longitude:=Долгота
+Latitude:=Широта:
+Longitude:=Долгота:
