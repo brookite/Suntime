@@ -157,12 +157,12 @@ def _format(data):
         return str(data)
 
 
-def cmp_depression(string):
-    if string == "Civil":
+def cmp_depression(object):
+    if object == "Civil" or object == 0:
         return Depression.CIVIL
-    elif string == "Nautical":
+    elif object == "Nautical" or object == 1:
         return Depression.NAUTICAL
-    elif string == "Astronomical":
+    elif object == "Astronomical" or object == 2:
         return Depression.ASTRONOMICAL
 
 

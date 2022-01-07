@@ -86,28 +86,12 @@
      <item>
       <widget class="QLabel" name="label_4">
        <property name="text">
-        <string>Depression:</string>
+        <string>Twilight:</string>
        </property>
       </widget>
      </item>
      <item>
-      <widget class="QComboBox" name="comboBox_2">
-       <item>
-        <property name="text">
-         <string>Civil</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Nautical</string>
-        </property>
-       </item>
-       <item>
-        <property name="text">
-         <string>Astronomical</string>
-        </property>
-       </item>
-      </widget>
+      <widget class="QComboBox" name="comboBox_2"/>
      </item>
     </layout>
    </item>

@@ -48,3 +48,7 @@ Noon/Midnight=Полдень/Полночь
 Daylength/Nightlength=Длина дня/Длина ночи
 Latitude:=Широта:
 Longitude:=Долгота:
+Civil=Гражданские
+Astronomical=Астрономические
+Nautical=Навигационные
+Twilight:=Сумерки:
